@@ -1,0 +1,4 @@
+- blazing fast
+- no bloat
+- renders heavy json like butter
+- best part - supports most of the functionality of jq, like it covers pipes, paths, slices, select, map, reduce, foreach, if, try, def, as destructuring, |= and +=, del, paths, regex functions, @csv/@base64/@uri and string interpolation

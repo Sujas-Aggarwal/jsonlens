@@ -18,7 +18,7 @@ if (!isJson && !/^\s*[\[{]/.test(raw.slice(0, 200))) return;
 // validate cheaply for normal sizes; for huge documents the formatter's structural checks decide
 if (!isJson || raw.length < 5e6) { try { JSON.parse(raw); } catch (_) { return; } }
 
-const ROW = 18;            // px per line
+const ROW = 20;            // px per line
 const MAX_H = 10e6;        // browsers cap element height (~17M px in Firefox, ~33M in Chrome)
 const CAP = 20000;         // characters rendered per line before a "more" chip appears
 
@@ -126,7 +126,7 @@ function hl(L) {
       let j = i;
       while (j < n) { const d = L.charCodeAt(j); if (d === 44 || d === 32 || d === 93 || d === 125) break; j++; }
       const t = L.slice(i, j);
-      o += `<span class="${t === 'null' ? 'z' : t === 'true' || t === 'false' ? 'b' : 'n'}">${esc(t)}</span>`; i = j;
+      o += `<span class="${t === 'null' || t === 'true' || t === 'false' ? 'b' : 'n'}">${esc(t)}</span>`; i = j;
     }
   }
   return o;
@@ -212,34 +212,41 @@ class View {
 // ------------------------------------------------------------------ UI
 const CSS = `
 *{box-sizing:border-box}
-.app{position:absolute;inset:0;display:flex;flex-direction:column;background:var(--bg);color:var(--fg);
-  font:13px ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
-  --bg:#fff;--fg:#1f2328;--bar:#f6f8fa;--bd:#d0d7de;--k:#0550ae;--s:#0a6b30;--n:#a04100;--b:#8250df;--nl:#8c959f;--p:#6e7781;--sel:#cfe3ff;--err:#cf222e}
-@media (prefers-color-scheme:dark){.app{--bg:#0d1117;--fg:#e6edf3;--bar:#161b22;--bd:#30363d;--k:#79c0ff;--s:#7ee787;--n:#ffa657;--b:#d2a8ff;--nl:#8b949e;--p:#8b949e;--sel:#1f3d66;--err:#ff7b72}}
-.bar{display:flex;align-items:center;gap:8px;padding:6px 10px;background:var(--bar);border-bottom:1px solid var(--bd);flex:none}
-.bar b{color:var(--k)}
-.bar input{flex:1;min-width:0;font:inherit;padding:5px 8px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);outline:none}
-.bar input:focus{border-color:var(--k)}
-.bar button{font:inherit;padding:4px 10px;border:1px solid var(--bd);border-radius:6px;background:var(--bg);color:var(--fg);cursor:pointer}
-.bar button:hover{border-color:var(--k)}
-#st{color:var(--p);white-space:nowrap;max-width:50%;overflow:hidden;text-overflow:ellipsis}
-#st.err{color:var(--err)}
+.app{position:absolute;inset:0;display:flex;flex-direction:column;background:#121314;color:#bbbebf;
+  font:13px "Cascadia Code","Cascadia Mono",Consolas,"SF Mono",Menlo,"DejaVu Sans Mono","Liberation Mono",monospace;
+  font-variant-ligatures:none}
+.app ::selection{background:#264f78aa}
+.bar{display:flex;align-items:center;gap:14px;padding:0 16px;height:40px;flex:none;background:#121314;border-bottom:1px solid #2a2b2c}
+.bar:focus-within{border-bottom-color:#3994bc}
+.pr{color:#3994bc;user-select:none}
+.bar input{flex:1;min-width:0;font:inherit;padding:0;border:0;background:transparent;color:#d7d9da;outline:none;caret-color:#3994bc}
+.bar input::placeholder{color:#555859}
+#st{color:#6b6e70;white-space:nowrap;max-width:50%;overflow:hidden;text-overflow:ellipsis;font-size:12px}
+#st.err{color:#f48771}
+#cp{font-size:12px;font-family:inherit;padding:0;border:0;background:none;color:#6b6e70;cursor:pointer}
+#cp:hover{color:#d7d9da}
 .vp{flex:1;overflow:auto;outline:none}
+.vp::-webkit-scrollbar{width:10px;height:10px}
+.vp::-webkit-scrollbar-track,.vp::-webkit-scrollbar-corner{background:transparent}
+.vp::-webkit-scrollbar-thumb{background:#ffffff14;border-radius:5px;border:2px solid #121314}
+.vp::-webkit-scrollbar-thumb:hover{background:#ffffff2e}
+@supports not selector(::-webkit-scrollbar){.vp{scrollbar-color:#2a2b2c #121314;scrollbar-width:thin}}
 .sz{position:relative;min-width:100%}
 .pin{position:sticky;top:0;overflow:hidden}
-.rows{color:var(--p);white-space:pre;will-change:transform}
-.r{height:${ROW}px;line-height:${ROW}px;padding:0 12px}
-.k{color:var(--k)}.s{color:var(--s)}.n{color:var(--n)}.b{color:var(--b)}.z{color:var(--nl)}
-.m{color:var(--fg);background:var(--bar);border:1px solid var(--bd);border-radius:4px;padding:0 5px;margin-left:6px;cursor:pointer}
-.all .r{background:var(--sel)}
+.rows{color:#6b6e70;white-space:pre;will-change:transform;padding-top:6px}
+.r{height:${ROW}px;line-height:${ROW}px;padding:0 16px}
+.k{color:#9cdcfe}.s{color:#ce9178}.n{color:#b5cea8}.b{color:#569cd6}
+.m{color:#bbbebf;background:#1e1f20;border-radius:3px;padding:0 6px;margin-left:8px;cursor:pointer}
+.m:hover{background:#2a2b2c}
+.all .r{background:#264f78aa}
 `;
 const host = document.createElement('div');
-host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;color-scheme:light dark';
+host.style.cssText = 'position:fixed;inset:0;z-index:2147483647;color-scheme:dark';
 const sh = host.attachShadow({ mode: 'open' });
 sh.innerHTML = `<style>${CSS}</style><div class="app">
-<div class="bar"><b>{ }</b>
-<input id="q" spellcheck="false" autocomplete="off" placeholder="jq filter, e.g.  .items[] | {id, name}     ( / to focus, Esc to clear )">
-<button id="cp" title="Copy everything currently shown">Copy</button><span id="st"></span></div>
+<div class="bar"><span class="pr">jq</span>
+<input id="q" spellcheck="false" autocomplete="off" placeholder=".items[] | {id, name}">
+<span id="st"></span><button id="cp" title="Copy everything shown">copy</button></div>
 <div class="vp" tabindex="0"><div class="sz"><div class="pin"><div class="rows"></div></div></div></div></div>`;
 body.textContent = '';
 body.style.margin = '0';
@@ -318,7 +325,7 @@ cp.addEventListener('click', async () => {
     ta.value = text; ta.style.cssText = 'position:fixed;opacity:0';
     document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
   }
-  cp.textContent = 'Copied'; setTimeout(() => { cp.textContent = 'Copy'; }, 1200);
+  cp.textContent = 'copied'; setTimeout(() => { cp.textContent = 'copy'; }, 1200);
 });
 let all = false;
 const setAll = on => { all = on; app.classList.toggle('all', on); };
