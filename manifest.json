@@ -1,0 +1,13 @@
+{
+  "manifest_version": 3,
+  "name": "JSON Lens",
+  "version": "1.0.0",
+  "description": "Fast JSON viewer: syntax colours, virtualized rendering, and a jq filter box for JSON responses.",
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["jq.js", "viewer.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}
