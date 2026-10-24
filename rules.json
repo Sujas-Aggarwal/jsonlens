@@ -1,0 +1,42 @@
+[
+  {
+    "id": 1,
+    "priority": 1,
+    "condition": {
+      "resourceTypes": ["main_frame"],
+      "requestMethods": ["get"],
+      "responseHeaders": [
+        { "header": "content-type", "values": ["text/csv*", "application/csv*", "text/x-csv*"] }
+      ],
+      "excludedResponseHeaders": [
+        { "header": "content-disposition", "values": ["attachment*"] }
+      ]
+    },
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "content-type", "operation": "set", "value": "text/vnd.jsonlens.csv; charset=utf-8" }
+      ]
+    }
+  },
+  {
+    "id": 2,
+    "priority": 1,
+    "condition": {
+      "resourceTypes": ["main_frame"],
+      "requestMethods": ["get"],
+      "responseHeaders": [
+        { "header": "content-type", "values": ["text/tab-separated-values*", "text/tsv*"] }
+      ],
+      "excludedResponseHeaders": [
+        { "header": "content-disposition", "values": ["attachment*"] }
+      ]
+    },
+    "action": {
+      "type": "modifyHeaders",
+      "responseHeaders": [
+        { "header": "content-type", "operation": "set", "value": "text/vnd.jsonlens.tsv; charset=utf-8" }
+      ]
+    }
+  }
+]
